@@ -64,11 +64,11 @@ options:
   state:
     description:
       - Desired state of the provided backend host.
-      - Note that C(drain) state was added in version 2.4. It is supported only by HAProxy version 1.5 or later,
+      - Note that C(drained) state was added in version 2.4. It is supported only by HAProxy version 1.5 or later,
         if used on versions < 1.5, it will be ignored.
     required: true
     default: null
-    choices: [ "enabled", "disabled", "drain" ]
+    choices: [ "enabled", "disabled", "drained" ]
   fail_on_not_found:
     description:
       - Fail whenever trying to enable/disable a backend host that does not exist
@@ -78,7 +78,7 @@ options:
   wait:
     description:
       - Wait until the server reports a status of 'UP' when `state=enabled`,
-        status of 'MAINT' when `state=disabled` or status of 'DRAIN' when `state=drain`
+        status of 'MAINT' when `state=disabled` or status of 'DRAIN' when `state=drained`
     required: false
     default: false
     version_added: "2.0"
@@ -190,7 +190,7 @@ EXAMPLES = '''
 
 # set the server in 'www' backend pool to drain mode
 - haproxy:
-    state: drain
+    state: drained
     host: '{{ inventory_hostname }}'
     socket: /var/run/haproxy.sock
     backend: www
@@ -206,7 +206,7 @@ from ansible.module_utils.basic import AnsibleModule
 
 DEFAULT_SOCKET_LOCATION = "/var/run/haproxy.sock"
 RECV_SIZE = 1024
-ACTION_CHOICES = ['enabled', 'disabled', 'drain']
+ACTION_CHOICES = ['enabled', 'disabled', 'drained']
 WAIT_RETRIES = 25
 WAIT_INTERVAL = 5
 
@@ -378,7 +378,7 @@ class HAProxy(object):
             cmd += "; shutdown sessions server $pxname/$svname"
         self.execute_for_backends(cmd, backend, host, 'MAINT')
 
-    def drain(self, host, backend, status='DRAIN'):
+    def drained(self, host, backend, status='DRAIN'):
         """
         Drain action, sets the server to DRAIN mode.
         In this mode mode, the server will not accept any new connections
@@ -406,8 +406,8 @@ class HAProxy(object):
             self.drain(self.host, self.backend, status='MAINT')
         elif self.state == 'disabled':
             self.disabled(self.host, self.backend, self.shutdown_sessions)
-        elif self.state == 'drain':
-            self.drain(self.host, self.backend)
+        elif self.state == 'drained':
+            self.drained(self.host, self.backend)
         else:
             self.module.fail_json(msg="unknown state specified: '%s'" % self.state)
 
